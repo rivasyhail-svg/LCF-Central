@@ -1,0 +1,462 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="LCF Central - Lifegiver Church of Faith">
+    <meta name="theme-color" content="#1B5E20">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    
+    <title>LCF Central - Lifegiver Church of Faith</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <base target="_blank">
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="bg-pattern" role="presentation"></div>
+    <div class="cross-overlay" role="presentation">✝</div>
+
+    <!-- Header -->
+    <header role="banner">
+        <button class="admin-badge" onclick="toggleAdminLogin()" aria-label="Admin Login">🔐 Admin</button>
+        
+        <div class="logo-wrapper">
+            <div class="lcf-simple" aria-label="LCF">LCF</div>
+            <h1 class="church-name">Lifegiver Church of Faith</h1>
+            <p class="church-subtitle">Living a life like Jesus</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container" role="main">
+        
+        <!-- Admin Login Section -->
+        <section id="admin-login-section" class="admin-login-section" aria-labelledby="admin-login-title" style="display: none;">
+            <div class="admin-login-header">
+                <h2 id="admin-login-title" class="admin-login-title">🔐 Admin Portal</h2>
+                <p class="admin-login-subtitle">Authorized Personnel Only</p>
+            </div>
+            
+            <form class="admin-form" onsubmit="handleAdminLogin(event)" aria-label="Admin Login Form">
+                <label for="admin-password" class="sr-only">Admin Password</label>
+                <input type="password" id="admin-password" class="admin-input" placeholder="Enter admin password" required autocomplete="current-password">
+                <button type="submit" class="admin-btn">Access Dashboard</button>
+                <div id="admin-error" class="admin-error" role="alert" aria-live="polite" style="display: none;">Invalid password. Please try again.</div>
+            </form>
+        </section>
+
+        <!-- Admin Dashboard -->
+        <section id="admin-dashboard" class="admin-dashboard" aria-labelledby="admin-dashboard-title" style="display: none;">
+            <div class="admin-dashboard-header">
+                <div>
+                    <h2 id="admin-dashboard-title" class="admin-dashboard-title">📊 Admin Dashboard</h2>
+                    <div class="admin-subtitle">Manage VIP Registrations, Attendance & Prizes</div>
+                </div>
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <span class="stat-number" id="total-vips">0</span>
+                        <span class="stat-label">Total VIPs</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="today-vips">0</span>
+                        <span class="stat-label">Today</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="pending-checkins-count">0</span>
+                        <span class="stat-label">Pending</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-actions">
+                <button class="admin-action-btn" onclick="refreshVipData()">🔄 Refresh</button>
+                <button class="admin-action-btn" onclick="exportVipData()">📥 Export CSV</button>
+                <button class="admin-action-btn danger" onclick="clearAllVipData()">🗑️ Clear All</button>
+                <button class="admin-action-btn" onclick="logoutAdmin()">🚪 Logout</button>
+            </div>
+
+            <!-- Prize Management -->
+            <div class="prize-management-section">
+                <div class="prize-management-title">🎁 Monthly Attendance Prize</div>
+                <p class="prize-description">Set the prize that VIPs will see for achieving full monthly attendance.</p>
+                
+                <div class="prize-input-group">
+                    <input type="text" id="prize-input" class="prize-input" placeholder="Enter prize description (e.g., 'Special Gift Basket', 'Dinner with Pastor', etc.)">
+                    <button class="admin-action-btn success" onclick="updatePrize()">💾 Save Prize</button>
+                </div>
+                
+                <div class="prize-display-box">
+                    <div class="prize-label">Current Prize</div>
+                    <div class="prize-value" id="current-prize-display">No prize set yet</div>
+                </div>
+            </div>
+
+            <!-- Pending Check-ins -->
+            <div class="pending-checkins-section">
+                <div class="pending-checkins-title">
+                    ⏳ Pending Check-ins
+                    <span class="pending-badge" id="pending-badge">0</span>
+                </div>
+                <p class="checkins-description">Review and validate Sunday attendance check-ins.</p>
+                
+                <div class="vip-registrations-list" id="pending-checkins-container" role="list" aria-label="Pending Check-ins">
+                    <div class="empty-admin">
+                        <div class="empty-admin-icon">✅</div>
+                        <p>No pending check-ins. All caught up!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All VIP Registrations -->
+            <div class="all-registrations-section">
+                <div class="admin-dashboard-header">
+                    <h3 class="section-title">👑 All VIP Registrations</h3>
+                </div>
+                
+                <div class="vip-registrations-list" id="vip-registrations-container" role="list" aria-label="VIP Registrations">
+                    <div class="empty-admin">
+                        <div class="empty-admin-icon">👑</div>
+                        <p>No VIP registrations found.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Welcome Hero -->
+        <section class="welcome-hero-section" id="welcome-hero" aria-labelledby="welcome-hero-title">
+            <div class="welcome-hero-greeting">Welcome to</div>
+            <h1 id="welcome-hero-title" class="welcome-hero-title">Lifegiver Church of Faith</h1>
+            <p class="welcome-hero-message">
+                We are delighted to have you here! Whether you're visiting for the first time or returning to connect with God, 
+                this is a place where you can encounter the Lord, experience His abundant love, and grow in your faith journey.
+            </p>
+            <div class="welcome-hero-verse">
+                "For where two or three gather in my name, there am I with them."
+                <span class="welcome-hero-verse-ref">Matthew 18:20</span>
+            </div>
+        </section>
+
+        <!-- Daily Bible Verse -->
+        <section class="daily-verse-section" id="daily-verse" aria-labelledby="daily-verse-label">
+            <div class="daily-verse-label" id="daily-verse-label">📖 Verse of the Day</div>
+            <div class="daily-verse-reference" id="daily-reference" aria-live="polite">Loading...</div>
+            <p class="daily-verse-text" id="daily-text">Loading today's verse...</p>
+            <div class="daily-verse-translation" id="daily-translation">New International Version</div>
+        </section>
+
+        <!-- Welcome Secondary -->
+        <section class="welcome-section" id="welcome-secondary" aria-labelledby="welcome-secondary-title">
+            <h2 id="welcome-secondary-title" class="welcome-text">
+                Welcome to the <span class="highlight">Presence of God</span>
+            </h2>
+            <p class="welcome-subtitle">Choose your path to encounter the Lord</p>
+        </section>
+
+        <!-- Selection Section -->
+        <section class="selection-section" id="selection-section" aria-labelledby="selection-title">
+            <h3 id="selection-title" class="selection-title">How would you like to connect today?</h3>
+            
+            <div class="selection-grid" role="group" aria-label="Member Type Selection">
+                <button class="selection-card" onclick="showVipSection()" aria-label="VIP Access">
+                    <span class="card-icon" aria-hidden="true">👑</span>
+                    <h4 class="card-title">VIP</h4>
+                    <p class="card-desc">For visitors and newcomers who are just beginning their journey of faith and relationship with the Lord.</p>
+                </button>
+                
+                <button class="selection-card" onclick="showPrayer('regular')" aria-label="Regular Attendee Access">
+                    <span class="card-icon" aria-hidden="true">🤝</span>
+                    <h4 class="card-title">Regular Attendees</h4>
+                    <p class="card-desc">For leaders and committed believers who desire deeper surrender and a stronger walk with God.</p>
+                </button>
+            </div>
+        </section>
+
+        <!-- VIP Section -->
+        <section id="vip-section" class="vip-section" aria-labelledby="vip-title" style="display: none;">
+            
+            <!-- Registration Form -->
+            <div id="vip-signup-form-container">
+                <div class="vip-header">
+                    <span class="vip-label">👑 VIP First-Timer Registration</span>
+                    <h2 id="vip-title" class="vip-title">Welcome to LCF Central</h2>
+                    <p class="vip-subtitle">Please fill in your details to help us connect with you better</p>
+                </div>
+
+                <form id="vip-signup-form" onsubmit="handleVipSignup(event)" aria-label="VIP Registration Form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="vip-name">Full Name *</label>
+                            <input type="text" id="vip-name" class="form-input" placeholder="Enter your full name" required autocomplete="name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="vip-age">Age *</label>
+                            <input type="number" id="vip-age" class="form-input" placeholder="Enter your age" min="1" max="120" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="vip-school">School/Institution *</label>
+                        <input type="text" id="vip-school" class="form-input" placeholder="Enter your school or institution" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="vip-inviter">Who Invited You to Church? *</label>
+                        <input type="text" id="vip-inviter" class="form-input" placeholder="Enter the name of who invited you" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="vip-contact">Contact Number (Optional)</label>
+                        <input type="tel" id="vip-contact" class="form-input" placeholder="Enter your contact number" autocomplete="tel">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn">Complete Registration</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetSelection()">Back</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Attendance Dashboard -->
+            <div id="vip-attendance-dashboard" style="display: none;">
+                <div class="vip-header">
+                    <span class="vip-label">👑 VIP Portal</span>
+                    <h2 class="vip-title">Welcome Back, <span id="vip-welcome-name">VIP</span>!</h2>
+                    <p class="vip-subtitle">Track your attendance and stay connected with the community</p>
+                </div>
+
+                <!-- Attendance -->
+                <div class="attendance-container">
+                    <div class="attendance-header">
+                        <div class="attendance-title">📅 Monthly Attendance</div>
+                        <div class="attendance-status" id="attendance-status">Loading...</div>
+                    </div>
+
+                    <div class="progress-container" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="4" aria-label="Attendance Progress">
+                        <div class="progress-bar" id="progress-bar" style="width: 0%">0/4 Sundays</div>
+                    </div>
+
+                    <div class="sundays-grid" id="sundays-grid" role="list" aria-label="Sunday Attendance List"></div>
+
+                    <!-- Check-in Button -->
+                    <div id="sunday-checkin-container">
+                        <button class="checkin-btn" id="checkin-btn" onclick="handleVipCheckIn()">
+                            ✋ Check In for Today's Service
+                        </button>
+                        <p class="checkin-status-text" id="checkin-status-text">Available on Sundays only</p>
+                    </div>
+
+                    <!-- Not Sunday Message -->
+                    <div id="not-sunday-container" style="display: none;">
+                        <div class="not-sunday-message">
+                            <h4>📅 See You This Sunday!</h4>
+                            <p>Attendance tracking is only available on Sundays. We look forward to seeing you at our next service!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prize Section -->
+                <div class="vip-prize-section" id="vip-prize-section">
+                    <div class="vip-prize-title">🎁 Monthly Attendance Prize</div>
+                    <div class="vip-prize-description">Attend all Sunday services this month to win this special prize!</div>
+                    
+                    <div class="vip-prize-display">
+                        <div class="vip-prize-label">This Month's Prize</div>
+                        <div class="vip-prize-value" id="vip-prize-value">Loading...</div>
+                    </div>
+                    
+                    <div class="progress-to-prize" id="progress-to-prize">
+                        <div class="progress-text" id="progress-text">Keep attending to win!</div>
+                        <div class="progress-container small">
+                            <div class="progress-bar" id="prize-progress-bar" style="width: 0%; font-size: 0.75rem;">0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="vip-actions">
+                    <button class="btn btn-secondary" onclick="resetSelection()">Back to Home</button>
+                    <button class="btn btn-outline" onclick="showPrayer('vip')">Read VIP Prayer</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Prayer Section -->
+        <section id="prayer-section" class="prayer-section" aria-labelledby="prayer-title-display" style="display: none;">
+            <div class="prayer-header">
+                <span id="prayer-label" class="prayer-label vip-label-text">VIP</span>
+                <h2 class="prayer-title" id="prayer-title-display">Prayer of Surrender</h2>
+                <p class="prayer-subtitle">A moment of intimate encounter with the Lord</p>
+            </div>
+            
+            <div class="prayer-content" id="prayer-text"></div>
+
+            <div class="amen">Amen 🙏</div>
+
+            <div class="prayer-actions">
+                <button class="btn" onclick="resetSelection()">Back to Selection</button>
+                <button class="btn btn-secondary" onclick="sharePrayer()">Share This Prayer</button>
+                <button class="btn btn-outline" onclick="newPrayer()">New Prayer</button>
+            </div>
+        </section>
+
+        <!-- Community Section -->
+        <section class="community-section" id="community-section" aria-labelledby="community-title">
+            <div class="community-header">
+                <h2 class="community-title">Community Board</h2>
+                <p class="community-subtitle">Share your prayer requests and testimonies with the family</p>
+            </div>
+
+            <div class="tabs" role="tablist" aria-label="Community Tabs">
+                <button class="tab-btn active" onclick="switchTab('submit', this)" role="tab" aria-selected="true" aria-controls="submit-tab" id="tab-submit">Submit Request</button>
+                <button class="tab-btn" onclick="switchTab('prayers', this)" role="tab" aria-selected="false" aria-controls="prayers-tab" id="tab-prayers">Prayer Requests</button>
+                <button class="tab-btn" onclick="switchTab('testimonies', this)" role="tab" aria-selected="false" aria-controls="testimonies-tab" id="tab-testimonies">Testimonies</button>
+            </div>
+
+            <!-- Submit Form -->
+            <div id="submit-tab" class="tab-content active" role="tabpanel" aria-labelledby="tab-submit">
+                <form id="community-form" onsubmit="handleSubmit(event)" aria-label="Community Post Form">
+                    <div class="form-group">
+                        <label class="form-label">I want to share a...</label>
+                        <div class="radio-group-container" role="radiogroup" aria-label="Post Type">
+                            <label class="radio-label" onclick="selectRadio('prayer')">
+                                <input type="radio" name="postType" value="prayer" id="radio-prayer" checked>
+                                <span>🙏 Prayer Request</span>
+                            </label>
+                            <label class="radio-label" onclick="selectRadio('testimony')">
+                                <input type="radio" name="postType" value="testimony" id="radio-testimony">
+                                <span>✨ Testimony</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="name-group">
+                        <label class="form-label" for="author-name">Your Name</label>
+                        <input type="text" id="author-name" class="form-input" placeholder="Enter your name" autocomplete="name">
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="anonymous" onchange="toggleAnonymous()">
+                        <label for="anonymous">Post anonymously</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="post-content">Your Message *</label>
+                        <textarea id="post-content" class="form-textarea" placeholder="Share what's on your heart..." required aria-required="true"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn">Share with the Community</button>
+                </form>
+            </div>
+
+            <!-- Prayer Requests -->
+            <div id="prayers-tab" class="tab-content" role="tabpanel" aria-labelledby="tab-prayers" hidden>
+                <div class="posts-container" id="prayer-posts" role="list" aria-label="Prayer Requests">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🙏</div>
+                        <p>No prayer requests yet. Be the first to share!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Testimonies -->
+            <div id="testimonies-tab" class="tab-content" role="tabpanel" aria-labelledby="tab-testimonies" hidden>
+                <div class="posts-container" id="testimony-posts" role="list" aria-label="Testimonies">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✨</div>
+                        <p>No testimonies yet. Share how God has moved in your life!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Video Testimony Section -->
+        <section class="video-testimony-section" id="video-testimony-section" aria-labelledby="video-testimony-title">
+            <div class="video-testimony-header">
+                <span class="video-testimony-label">🎬 Testimonies of Transformation</span>
+                <h2 id="video-testimony-title" class="video-testimony-title">When They Surrendered Their Life to God</h2>
+                <p class="video-testimony-subtitle">Watch powerful stories of lives transformed by faith and surrender to Christ</p>
+            </div>
+
+            <div class="videos-grid">
+                <div class="video-card">
+                    <div class="video-wrapper" id="video-wrapper-1">
+                        <div class="video-placeholder" onclick="promptVideoLink(1)">
+                            <span class="video-placeholder-icon">▶️</span>
+                            <span class="video-placeholder-text">Click to Add YouTube Video</span>
+                        </div>
+                    </div>
+                    <div class="video-info">
+                        <h3 class="video-title">Testimony of Grace</h3>
+                        <p class="video-description">A powerful journey of surrender and divine transformation</p>
+                    </div>
+                </div>
+
+                <div class="video-card">
+                    <div class="video-wrapper" id="video-wrapper-2">
+                        <div class="video-placeholder" onclick="promptVideoLink(2)">
+                            <span class="video-placeholder-icon">▶️</span>
+                            <span class="video-placeholder-text">Click to Add YouTube Video</span>
+                        </div>
+                    </div>
+                    <div class="video-info">
+                        <h3 class="video-title">Redeemed and Restored</h3>
+                        <p class="video-description">Witness how God rebuilds broken lives through faith</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Video Input -->
+            <div class="video-input-section" id="video-input-section" style="display: none;">
+                <div class="video-input-title">🎥 Update Video Links</div>
+
+                <div class="video-input-group">
+                    <input type="text" id="video-link-1" class="video-input" placeholder="Paste YouTube URL for Video 1" />
+                    <button class="video-btn" onclick="updateVideo(1)">Update Video 1</button>
+                </div>
+
+                <div class="video-input-group">
+                    <input type="text" id="video-link-2" class="video-input" placeholder="Paste YouTube URL for Video 2" />
+                    <button class="video-btn" onclick="updateVideo(2)">Update Video 2</button>
+                </div>
+
+                <p class="video-help-text">💡 Tip: Copy the full YouTube URL or just the video ID</p>
+            </div>
+        </section>
+
+        <!-- Bible Verse Section -->
+        <section class="verse-section" id="verse-section" aria-labelledby="verse-header">
+            <div class="verse-header" id="verse-header">Word of Life</div>
+            <div class="verse-reference">John 10:10 (NIV)</div>
+            <div class="verse-text">
+                "The thief comes only to steal and kill and destroy;
+                <span class="verse-highlight">I have come that they may have life, and have it to the full."</span>
+            </div>
+            <div class="verse-divider"></div>
+            <div class="verse-translation">— Jesus Christ</div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-logo">LCF Central</div>
+        <p>Lifegiver Church of Faith</p>
+        <p class="footer-verse">"Living a life like Jesus"</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/prayers.js"></script>
+    <script src="js/community.js"></script>
+    <script src="js/vip.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
